@@ -1,0 +1,7 @@
+# 数据文件（含用户阅读记录、个人信息）
+*.json
+*.xlsx
+*.txt
+
+# Chrome 用户数据
+.chrome_data/
