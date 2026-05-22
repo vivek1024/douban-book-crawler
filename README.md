@@ -5,15 +5,15 @@
 ## 数据流
 
 ```
-douban_book_crawler.py          → douban_contacts.json  (关注列表)
-  (爬虫, 登录→爬关注→爬书单)     → douban_progress.json (每个用户的读书记录)
-                                 → douban_result.json   (排行榜)
+① douban_book_crawler.py       → douban_contacts.json  (关注列表/读者列表)
+   (自动运行：登录 → 爬关注列表  → douban_progress.json (每人读过的书)
+              → 爬每人书单)     → douban_result.json   (排行榜)
                                         ↓
-douban_build_readers.py          → douban_result.json   (注入读者列表)
-  (反转, 书→读者列表)
+② douban_build_readers.py       → douban_result.json   (给每本书注入读者列表)
+   (反转索引：书 → 读过的人)
                                         ↓
-douban_book_gui.py               ← douban_result.json + douban_progress.json + douban_contacts.json
-  (GUI, 排行榜浏览)
+③ douban_book_gui.py            ← douban_result.json + douban_progress.json + douban_contacts.json
+   (GUI 浏览)
 ```
 
 ## 用户需要补充的配置
@@ -39,20 +39,25 @@ pip install playwright beautifulsoup4 lxml
 playwright install chromium
 ```
 
-### 2. 运行爬虫
+### 2. 运行爬虫（先爬关注列表，再爬每人书单）
 
 ```bash
 python douban_book_crawler.py
 ```
 
-首次运行会自动打开 Chrome 浏览器，需要你在浏览器中扫码/登录豆瓣。登录后程序会自动爬取关注列表和所有人的书单。
+程序自动执行以下步骤：
 
-- **断点续爬：** 每爬完一人自动存档，中断后重跑会自动从断点继续
-- **被反爬拦截：** 程序会暂停并提示你在浏览器中完成验证，按 Enter 继续
+1. **爬关注列表** — 通过 Chrome 打开豆瓣，你扫码/登录后，自动爬取你关注的所有人
+2. **爬每人书单** — 逐个爬取关注用户的「读过」书籍列表
 
-### 3. 构建读者列表
+> 首次运行会打开 Chrome 浏览器，需手动登录豆瓣。登录信息保存在独立 Chrome 用户目录（`.chrome_data/`），后续复用无需重复登录。
 
-爬虫完成后，运行反转脚本给排行榜注入读者信息：
+- **断点续爬：** 每爬完一人自动存档，中断后重跑自动从断点继续
+- **被反爬拦截：** 程序暂停并提示你在浏览器中完成验证，按 Enter 继续
+
+### 3. 反转索引（给每本书注入读者列表）
+
+爬虫完成后，运行此脚本将数据反转，建立「书 → 读过的人」的映射：
 
 ```bash
 python douban_build_readers.py
